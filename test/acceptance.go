@@ -1,8 +1,11 @@
 package test
 
 import (
+	"context"
 	"testing"
+	"time"
 
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/pubsub/tests"
 )
 
@@ -66,5 +69,42 @@ func OfficialImplementationAcceptance(fixture PubSubFixture) func(t *testing.T) 
 			fixture.WithConsumerGroup("test"),
 			tests.ConsumerGroupPubSubConstructor(fixture),
 		)
+
+		t.Run("ensure nil messages can be processed", TestNilPayloadMessagePublishingAndReceiving(fixture))
+	}
+}
+
+// TestNilPayloadMessagePublishingAndReceiving ensures that a publisher may publish
+// messages without any payload, that is a nil payload.
+//
+// Clarification: https://github.com/ThreeDotsLabs/watermill/issues/565#issuecomment-2885938295
+func TestNilPayloadMessagePublishingAndReceiving(fixture PubSubFixture) func(t *testing.T) {
+	return func(t *testing.T) {
+		topic := "testNilMessageTopic"
+		pub, sub := fixture(t, "testNilMessage")
+
+		// TODO: replace with t.Context() after Watermill bumps to Golang 1.24
+		in, err := sub.Subscribe(context.TODO(), topic)
+		if err != nil {
+			t.Fatal("unable to subscribe to topic:", err)
+		}
+
+		nilPayload := message.NewMessage("nilMessage", nil)
+		if err = pub.Publish(topic, nilPayload); err != nil {
+			t.Fatal("unable to publish message with nil payload:", err)
+		}
+
+		select {
+		case msg := <-in:
+			msg.Ack()
+			if msg.UUID != nilPayload.UUID {
+				t.Fatal("UUIDs do not match")
+			}
+			if msg.Payload == nil {
+				t.Fatal("nil payload, but should be an empty byte list instead")
+			}
+		case <-time.After(time.Second):
+			t.Fatal("no message was delivered within one second")
+		}
 	}
 }

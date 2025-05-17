@@ -29,7 +29,7 @@ func createTopicAndOffsetsTablesIfAbsent(ctx context.Context, db SQLiteConnectio
 		'offset' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 		uuid TEXT NOT NULL,
 		created_at TEXT NOT NULL,
-		payload BLOB NOT NULL,
+		payload BLOB,
 		metadata JSON NOT NULL
 	);`)
 	if err != nil {

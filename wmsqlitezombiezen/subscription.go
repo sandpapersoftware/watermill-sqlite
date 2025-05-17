@@ -96,8 +96,13 @@ func (s *subscription) NextBatch() (batch []rawMessage, err error) {
 		if _, err = io.Copy(b, s.stmtNextMessageBatch.ColumnReader(2)); err != nil {
 			return nil, fmt.Errorf("unable to read message payload: %w", err)
 		}
-		next.Payload = slices.Clone(b.Bytes())
-		b.Reset()
+		if b.Len() == 0 {
+			// Clarification: https://github.com/ThreeDotsLabs/watermill/issues/565#issuecomment-2885938295
+			next.Payload = []byte{}
+		} else {
+			next.Payload = slices.Clone(b.Bytes())
+			b.Reset()
+		}
 		if _, err = io.Copy(b, s.stmtNextMessageBatch.ColumnReader(3)); err != nil {
 			return nil, fmt.Errorf("unable to read message metadata: %w", err)
 		}

@@ -34,7 +34,7 @@ func createTopicAndOffsetsTablesIfAbsent(conn *sqlite.Conn, messagesTableName, o
 			'offset' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			uuid TEXT NOT NULL,
 			created_at TEXT NOT NULL,
-			payload BLOB NOT NULL,
+			payload BLOB,
 			metadata JSON NOT NULL
 		);`,
 		nil); err != nil {

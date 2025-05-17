@@ -88,6 +88,10 @@ func buildBatch(rows *sql.Rows) (batch []rawMessage, err error) {
 		if err = rows.Scan(&next.Offset, &next.UUID, &next.Payload, &rawMetadata); err != nil {
 			return nil, err
 		}
+		if next.Payload == nil {
+			// Clarification: https://github.com/ThreeDotsLabs/watermill/issues/565#issuecomment-2885938295
+			next.Payload = []byte{}
+		}
 		if err = json.Unmarshal(rawMetadata, &next.Metadata); err != nil {
 			return nil, fmt.Errorf("unable to parse metadata JSON: %w", err)
 		}
