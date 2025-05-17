@@ -39,11 +39,11 @@ wait:
 	# nothing to do - for compatibility with other makefiles
 
 build:
-	go build ./...
+  # nothing to do - for compatibility with other makefiles
 
 fmt:
-	go fmt ./...
-	goimports -l -w .
+	(cd wmsqlitemodernc && go fmt ./... && goimports -l -w .)
+	(cd wmsqlitezombiezen && go fmt ./... && goimports -l -w .)
 
 update_watermill:
 	go get -u github.com/ThreeDotsLabs/watermill
