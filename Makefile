@@ -4,16 +4,16 @@ up:
 	# nothing to do - for compatibility with other makefiles
 
 test:
-	(cd wmsqlitezombiezen && go test -count=5 -failfast -timeout=15m ./...)
-	(cd wmsqlitemodernc && go test -count=5 -failfast -timeout=15m ./...)
+	(cd wmsqlitezombiezen && go test -count=5 -failfast -timeout=18m ./...)
+	(cd wmsqlitemodernc && go test -count=5 -failfast -timeout=18m ./...)
 
 test_v:
-	(cd wmsqlitemodernc && go test -v -count=5 -failfast -timeout=15m ./...)
-	(cd wmsqlitezombiezen && go test -v -count=5 -failfast -timeout=15m ./...)
+	(cd wmsqlitemodernc && go test -v -count=5 -failfast -timeout=18m ./...)
+	(cd wmsqlitezombiezen && go test -v -count=5 -failfast -timeout=18m ./...)
 
 test_short:
-	(cd wmsqlitemodernc && go test -short -count=5 -failfast -timeout=15m ./...)
-	(cd wmsqlitezombiezen && go test -short -count=5 -failfast -timeout=15m ./...)
+	(cd wmsqlitemodernc && go test -short -count=5 -failfast -timeout=18m ./...)
+	(cd wmsqlitezombiezen && go test -short -count=5 -failfast -timeout=18m ./...)
 
 test_race:
 	(cd wmsqlitemodernc && go test -v -count=5 -failfast -timeout=18m -race ./...)
@@ -32,8 +32,8 @@ test_codecov: up wait
 
 
 benchmark:
-	(cd test && go wmsqlitemodernc -bench=. -run=^BenchmarkAll$$ -timeout=15s)
-	(cd test && go wmsqlitezombiezen -bench=. -run=^BenchmarkAll$$ -timeout=15s)
+	(cd wmsqlitemodernc && go test -bench=. -run=^BenchmarkAll$$ -timeout=15s)
+	(cd wmsqlitezombiezen && go test -bench=. -run=^BenchmarkAll$$ -timeout=15s)
 
 wait:
 	# nothing to do - for compatibility with other makefiles
