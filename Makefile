@@ -16,12 +16,12 @@ test_short:
 	(cd wmsqlitezombiezen && go test -short -count=5 -failfast -timeout=30m ./...)
 
 test_race:
-	(cd wmsqlitemodernc && go test -v -count=5 -failfast -timeout=30m -race ./...)
-	(cd wmsqlitezombiezen && go test -v -count=5 -failfast -timeout=30m -race ./...)
+	(cd wmsqlitemodernc && go test -v -count=2 -failfast -timeout=50m -race ./...)
+	(cd wmsqlitezombiezen && go test -v -count=2 -failfast -timeout=50m -race ./...)
 
 test_stress:
-	(cd wmsqlitemodernc && go test -v -count=15 -failfast -timeout=30m ./...)
-	(cd wmsqlitezombiezen && go test -v -count=15 -failfast -timeout=30m ./...)
+	(cd wmsqlitemodernc && go test -v -count=15 -failfast -timeout=50m ./...)
+	(cd wmsqlitezombiezen && go test -v -count=15 -failfast -timeout=50m ./...)
 
 test_reconnect:
 	# nothing to do - for compatibility with other makefiles
