@@ -10,18 +10,6 @@ import (
 
 var defaultLogger = watermill.NopLogger{}
 
-// TODO: replace with cmp.Or after Watermill
-// upgrades Golang version to 1.22
-func cmpOrTODO[T comparable](vals ...T) T {
-	var zero T
-	for _, val := range vals {
-		if val != zero {
-			return val
-		}
-	}
-	return zero
-}
-
 // SQLiteDatabase is an interface that represents an SQLite database.
 type SQLiteDatabase interface {
 	SQLiteConnection

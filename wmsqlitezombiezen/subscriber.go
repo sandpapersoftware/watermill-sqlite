@@ -170,7 +170,9 @@ func NewSubscriber(connectionDSN string, options SubscriberOptions) (message.Sub
 	if options.BatchSize > 1_000_000 {
 		return nil, errors.New("BatchSize must be less than a million")
 	}
-	if options.PollInterval != 0 && options.PollInterval < time.Millisecond {
+	if options.PollInterval == 0 {
+		options.PollInterval = time.Second
+	} else if options.PollInterval < time.Millisecond {
 		return nil, errors.New("PollInterval must be greater than one millisecond")
 	}
 	if options.PollInterval > time.Hour*24*7 {
@@ -182,6 +184,9 @@ func NewSubscriber(connectionDSN string, options SubscriberOptions) (message.Sub
 		} else {
 			return nil, errors.New("LockTimeout must be greater than one second")
 		}
+	}
+	if options.BatchSize == 0 {
+		options.BatchSize = DefaultMessageBatchSize
 	}
 
 	nackChannel := func() <-chan time.Time {
@@ -211,26 +216,26 @@ func NewSubscriber(connectionDSN string, options SubscriberOptions) (message.Sub
 	if !ok {
 		return nil, errors.New("BufferPool.Get() did not return a *bytes.Buffer")
 	}
+	if options.Logger == nil {
+		options.Logger = defaultLogger
+	}
 
 	ID := uuid.New().String()
 	tng := options.TableNameGenerators.WithDefaultGeneratorsInsteadOfNils()
 	return &subscriber{
 		ConnectionDSN:             connectionDSN,
 		UUID:                      ID,
-		PollInterval:              cmpOrTODO(options.PollInterval, time.Second),
+		PollInterval:              options.PollInterval,
 		LockTimeoutInSeconds:      int(math.Round(options.LockTimeout.Seconds())),
 		InitializeSchema:          options.InitializeSchema,
 		ConsumerGroupMatcher:      options.ConsumerGroupMatcher,
-		BatchSize:                 cmpOrTODO(options.BatchSize, DefaultMessageBatchSize),
+		BatchSize:                 options.BatchSize,
 		NackChannel:               nackChannel,
 		Closed:                    make(chan struct{}),
 		TopicTableNameGenerator:   tng.Topic,
 		OffsetsTableNameGenerator: tng.Offsets,
 		BufferPool:                options.BufferPool,
-		Logger: cmpOrTODO[watermill.LoggerAdapter](
-			options.Logger,
-			defaultLogger,
-		).With(watermill.LogFields{
+		Logger: options.Logger.With(watermill.LogFields{
 			"subscriber_id": ID,
 		}),
 		Subscriptions: &sync.WaitGroup{},

@@ -48,6 +48,9 @@ func NewPublisher(conn *sqlite.Conn, options PublisherOptions) (message.Publishe
 	if conn == nil {
 		return nil, ErrDatabaseConnectionIsNil
 	}
+	if options.Logger == nil {
+		options.Logger = defaultLogger
+	}
 
 	ID := uuid.New().String()
 	tng := options.TableNameGenerators.WithDefaultGeneratorsInsteadOfNils()
@@ -56,10 +59,7 @@ func NewPublisher(conn *sqlite.Conn, options PublisherOptions) (message.Publishe
 		TopicTableNameGenerator:   tng.Topic,
 		OffsetsTableNameGenerator: tng.Offsets,
 		InitializeSchema:          options.InitializeSchema,
-		Logger: cmpOrTODO[watermill.LoggerAdapter](
-			options.Logger,
-			defaultLogger,
-		).With(watermill.LogFields{
+		Logger: options.Logger.With(watermill.LogFields{
 			"publisher_id": ID,
 		}),
 		mu:          sync.Mutex{},

@@ -51,6 +51,9 @@ func NewPublisher(db SQLiteConnection, options PublisherOptions) (message.Publis
 	if options.InitializeSchema && isTx(db) {
 		return nil, ErrAttemptedTableInitializationWithinTransaction
 	}
+	if options.Logger == nil {
+		options.Logger = defaultLogger
+	}
 
 	ID := uuid.New().String()
 	tng := options.TableNameGenerators.WithDefaultGeneratorsInsteadOfNils()
@@ -60,13 +63,9 @@ func NewPublisher(db SQLiteConnection, options PublisherOptions) (message.Publis
 		DB:                        db,
 		TopicTableNameGenerator:   tng.Topic,
 		OffsetsTableNameGenerator: tng.Offsets,
-		Logger: cmpOrTODO[watermill.LoggerAdapter](
-			options.Logger,
-			defaultLogger,
-		).With(watermill.LogFields{
+		Logger: options.Logger.With(watermill.LogFields{
 			"publisher_id": ID,
 		}),
-
 		mu:          sync.Mutex{},
 		knownTopics: make(map[string]struct{}),
 	}, nil

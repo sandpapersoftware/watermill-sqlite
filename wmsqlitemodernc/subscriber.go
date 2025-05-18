@@ -151,7 +151,9 @@ func NewSubscriber(db SQLiteDatabase, options SubscriberOptions) (message.Subscr
 	if options.BatchSize > 1_000_000 {
 		return nil, errors.New("BatchSize must be less than a million")
 	}
-	if options.PollInterval != 0 && options.PollInterval < time.Millisecond {
+	if options.PollInterval == 0 {
+		options.PollInterval = time.Second
+	} else if options.PollInterval < time.Millisecond {
 		return nil, errors.New("PollInterval must be greater than one millisecond")
 	}
 	if options.PollInterval > time.Hour*24*7 {
@@ -163,6 +165,9 @@ func NewSubscriber(db SQLiteDatabase, options SubscriberOptions) (message.Subscr
 		} else {
 			return nil, errors.New("LockTimeout must be greater than one second")
 		}
+	}
+	if options.BatchSize == 0 {
+		options.BatchSize = DefaultMessageBatchSize
 	}
 
 	nackChannel := func() <-chan time.Time {
@@ -185,25 +190,25 @@ func NewSubscriber(db SQLiteDatabase, options SubscriberOptions) (message.Subscr
 			}
 		}
 	}
+	if options.Logger == nil {
+		options.Logger = defaultLogger
+	}
 
 	ID := uuid.New().String()
 	tng := options.TableNameGenerators.WithDefaultGeneratorsInsteadOfNils()
 	return &subscriber{
 		DB:                        db,
 		UUID:                      ID,
-		PollInterval:              cmpOrTODO(options.PollInterval, time.Second),
+		PollInterval:              options.PollInterval,
 		LockTimeoutInSeconds:      int(math.Round(options.LockTimeout.Seconds())),
 		InitializeSchema:          options.InitializeSchema,
 		ConsumerGroupMatcher:      options.ConsumerGroupMatcher,
-		BatchSize:                 cmpOrTODO(options.BatchSize, DefaultMessageBatchSize),
+		BatchSize:                 options.BatchSize,
 		NackChannel:               nackChannel,
 		Closed:                    make(chan struct{}),
 		TopicTableNameGenerator:   tng.Topic,
 		OffsetsTableNameGenerator: tng.Offsets,
-		Logger: cmpOrTODO[watermill.LoggerAdapter](
-			options.Logger,
-			defaultLogger,
-		).With(watermill.LogFields{
+		Logger: options.Logger.With(watermill.LogFields{
 			"subscriber_id": ID,
 		}),
 		Subscriptions: &sync.WaitGroup{},

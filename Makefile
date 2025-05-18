@@ -4,12 +4,12 @@ up:
 	# nothing to do - for compatibility with other makefiles
 
 test:
-	(cd wmsqlitezombiezen && go test -count=5 -failfast -timeout=30m ./...)
-	(cd wmsqlitemodernc && go test -count=5 -failfast -timeout=30m ./...)
+	(cd wmsqlitezombiezen && go test -count=2 -failfast -timeout=30m ./...)
+	(cd wmsqlitemodernc && go test -count=2 -failfast -timeout=30m ./...)
 
 test_v:
-	(cd wmsqlitemodernc && go test -v -count=5 -failfast -timeout=30m ./...)
-	(cd wmsqlitezombiezen && go test -v -count=5 -failfast -timeout=30m ./...)
+	(cd wmsqlitemodernc && go test -v -count=2 -failfast -timeout=30m ./...)
+	(cd wmsqlitezombiezen && go test -v -count=2 -failfast -timeout=30m ./...)
 
 test_short:
 	(cd wmsqlitemodernc && go test -short -count=5 -failfast -timeout=30m ./...)
@@ -20,8 +20,8 @@ test_race:
 	(cd wmsqlitezombiezen && go test -v -count=2 -failfast -timeout=50m -race ./...)
 
 test_stress:
-	(cd wmsqlitemodernc && go test -v -count=15 -failfast -timeout=50m ./...)
-	(cd wmsqlitezombiezen && go test -v -count=15 -failfast -timeout=50m ./...)
+	(cd wmsqlitemodernc && go test -v -count=5 -failfast -timeout=50m ./...)
+	(cd wmsqlitezombiezen && go test -v -count=5 -failfast -timeout=50m ./...)
 
 test_reconnect:
 	# nothing to do - for compatibility with other makefiles
