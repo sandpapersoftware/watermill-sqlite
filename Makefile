@@ -53,4 +53,11 @@ update_watermill:
 	sed -i '\|go 1\.|d' go.mod
 	go mod edit -fmt
 
+
+reflex_modernc:
+		(cd wmsqlitemodernc && reflex --inverse-regex=testdata -- sh -c 'clear; echo "[00] ---\n";go test ./... | grep -v -E "^(\?|ok)\s+"; echo "---"')
+
+reflex_zombiezen:
+		(cd wmsqlitezombiezen && reflex --inverse-regex=testdata -- sh -c 'clear; echo "[00] ---\n";go test ./... | grep -v -E "^(\?|ok)\s+"; echo "---"')
+
 default: test
