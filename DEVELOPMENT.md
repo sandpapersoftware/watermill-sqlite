@@ -78,7 +78,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-db, err := sql.Open("sqlite", ":memory:?journal_mode=WAL&busy_timeout=1000&cache=shared")
+db, err := sql.Open("sqlite", ":memory:")
 if err != nil {
 	panic(err)
 }
@@ -119,7 +119,7 @@ It is about **9 times faster** than the ModernC variant when publishing messages
 import "github.com/ThreeDotsLabs/watermill-sqlite/wmsqlitezombiezen"
 
 // &cache=shared is critical, see: https://github.com/zombiezen/go-sqlite/issues/92#issuecomment-2052330643
-connectionDSN := ":memory:?journal_mode=WAL&busy_timeout=1000&cache=shared")
+connectionDSN := ":memory:")
 conn, err := sqlite.OpenConn(connectionDSN)
 if err != nil {
 	panic(err)

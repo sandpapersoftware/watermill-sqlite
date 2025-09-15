@@ -132,7 +132,7 @@ func TestPublishingInTransaction(t *testing.T) {
 // See more: https://github.com/ThreeDotsLabs/watermill/issues/311
 func TestConcurrentTransactions(t *testing.T) {
 	t.Skip("messages are never lost and the test simply dead locks because there is only one connection")
-	t.Run("concurrent transaction with :memory: connection", testConcurrentTransactions(":memory:?journal_mode=WAL&busy_timeout=1000&secure_delete=true&foreign_keys=true&cache=shared"))
+	t.Run("concurrent transaction with :memory: connection", testConcurrentTransactions(":memory:"))
 }
 
 func testConcurrentTransactions(connectionDSN string) func(*testing.T) {

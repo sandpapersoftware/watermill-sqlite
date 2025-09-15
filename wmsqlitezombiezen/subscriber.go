@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"strings"
 	"sync"
 	"time"
 
@@ -158,9 +157,11 @@ func NewSubscriber(connectionDSN string, options SubscriberOptions) (message.Sub
 	if connectionDSN == "" {
 		return nil, errors.New("database connection DSN is empty")
 	}
-	if strings.Contains(connectionDSN, ":memory:") {
-		return nil, errors.New(`sqlite: ":memory:" does not work with multiple connections, use "file::memory:?mode=memory&cache=shared`)
-	}
+	// &cache=shared is may be critical, see: https://github.com/zombiezen/go-sqlite/issues/92#issuecomment-2052330643
+	// connectionDSN := ":memory:?journal_mode=WAL&busy_timeout=1000&cache=shared")
+	// if strings.Contains(connectionDSN, ":memory:") {
+	// 	return nil, errors.New(`sqlite: ":memory:" does not work with multiple connections, use "file::memory:?mode=memory&cache=shared`)
+	// }
 	if options.ConsumerGroupMatcher == nil {
 		options.ConsumerGroupMatcher = defaultConsumerGroupMatcher
 	}
