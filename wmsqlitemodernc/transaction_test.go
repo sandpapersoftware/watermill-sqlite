@@ -152,6 +152,8 @@ func testConcurrentTransactions(connectionDSN string) func(*testing.T) {
 			}
 		})
 
+		// TODO: when Watermill upgrades to Golang 1.24
+		// ctx, cancel := context.WithCancel(t.Context())
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 

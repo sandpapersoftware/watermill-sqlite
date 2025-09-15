@@ -16,7 +16,7 @@ func TestBasicSendRecieve(setup PubSubFixture) func(t *testing.T) {
 		t.Run("publish 20 messages", func(t *testing.T) {
 			t.Parallel()
 
-			for i := 0; i < 10; i++ {
+			for range 10 {
 				msg := message.NewMessage(uuid.New().String(), []byte("test"))
 				msg2 := message.NewMessage(uuid.New().String(), []byte("test"))
 				if err := pub.Publish(topic, msg, msg2); err != nil {

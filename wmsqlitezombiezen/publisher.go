@@ -84,8 +84,9 @@ func (p *publisher) Publish(topic string, messages ...*message.Message) (err err
 	if len(messages) == 0 {
 		return nil
 	}
-	messagesTableName := p.TopicTableNameGenerator(topic)
 
+	messagesTableName := p.TopicTableNameGenerator(topic)
+	p.connection.SetInterrupt(messages[0].Context().Done())
 	if p.InitializeSchema {
 		if _, ok := p.knownTopics[topic]; !ok {
 			if err = createTopicAndOffsetsTablesIfAbsent(
