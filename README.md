@@ -2,10 +2,11 @@
 <img align="right" width="200" src="https://watermill.io/img/gopher.svg">
 
 [![CI Status](https://github.com/ThreeDotsLabs/watermill-sqlite/actions/workflows/master.yml/badge.svg)](https://github.com/ThreeDotsLabs/watermill-sqlite/actions/workflows/master.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/ThreeDotsLabs/watermill-sqlite)](https://goreportcard.com/report/github.com/ThreeDotsLabs/watermill-sqlite)
 
-This is Pub/Sub for the [Watermill](https://watermill.io/) project.
+This is Pub/Sub for the [Watermill](https://watermill.io/) project. The implementation provides two CGO-free driver variants optimized for different use cases.
 
+1. ModernC [![Go Reference](https://pkg.go.dev/badge/github.com/ThreeDotsLabs/watermill.svg)](https://pkg.go.dev/github.com/ThreeDotsLabs/watermill-sqlite/wmsqlitemodernc) [![Go Report Card](https://goreportcard.com/badge/github.com/ThreeDotsLabs/watermill-sqlite)](https://goreportcard.com/report/github.com/ThreeDotsLabs/watermill-sqlite/wmsqlitemodernc)
+2. ZombieZen [![Go Reference](https://pkg.go.dev/badge/github.com/ThreeDotsLabs/watermill.svg)](https://pkg.go.dev/github.com/ThreeDotsLabs/watermill-sqlite/wmsqlitezombiezen) [![Go Report Card](https://goreportcard.com/badge/github.com/ThreeDotsLabs/watermill-sqlite)](https://goreportcard.com/report/github.com/ThreeDotsLabs/watermill-sqlite/wmsqlitezombiezen)
 
 See [DEVELOPMENT.md](./DEVELOPMENT.md) for more information about running and testing.
 

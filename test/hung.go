@@ -15,7 +15,7 @@ func TestHungOperations(setup PubSubFixture) func(t *testing.T) {
 		pub, sub := setup(t, "hungTests")
 
 		t.Run("busy destination channel releases row lock", hungDestinationChannel(pub, sub))
-		// t.Run("long ack does not lose row lock", hungLongAck(pub, sub))
+		t.Run("long ack does not lose row lock", hungLongAck(pub, sub))
 		t.Run("nack does not cause an inifite loop", hungNackTest(pub, sub))
 	}
 }
@@ -71,9 +71,21 @@ func hungDestinationChannel(pub message.Publisher, sub message.Subscriber) func(
 	}
 }
 
+// Simulates a situation where a message is being processed by one subscriber slowly
+// while another attempts to obtain lock on the same message.
+// This can cause processing duplication when the second subscriber succeeds.
+// The basic publishing test also sometimes delivers an extra batch of messages, likely for the same reason.
+//
+// An idea: the long-ack test should be running on two separate connections to pass.
+// This did not pan out. Another idea is to write a low-level test that examines the
+// SQL table data for the lock state.
+//
+// TODO: The test used to pass for ModernC implementation (maybe).
 func hungLongAck(pub message.Publisher, sub message.Subscriber) func(t *testing.T) {
 	topic := "hung-long-ack-test"
 	return func(t *testing.T) {
+		t.Skip("this test passes for ZombieZen, but fails for ModernC")
+
 		t.Parallel()
 		// TODO: replace with t.Context() after Watermill bumps to Golang 1.24
 		ctx, cancel := context.WithCancel(context.TODO())

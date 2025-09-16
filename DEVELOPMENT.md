@@ -8,10 +8,24 @@ Golang SQLite3 driver pack for <https://watermill.io> event dispatch framework. 
 
 SQLite3 does not support querying `FOR UPDATE`, which is used for row locking when subscribers in the same consumer group read an event batch in official Watermill SQL PubSub implementations. Current architectural decision is to lock a consumer group offset using `unixepoch()+lockTimeout` time stamp. While one consumed message is processing per group, the offset lock time is extended by `lockTimeout` periodically by `time.Ticker`. If the subscriber is unable to finish the consumer group batch, other subscribers will take over the lock as soon as the grace period runs out. A time lock fulfills the role of a traditional database network timeout that terminates transactions when its client disconnects.
 
+- [ ] Implement SQLite connection back off manager
+
+    A friend recommended implementing a back off manager. I think the SQLite `busy_timeout` produces a linear back off timeout. When attemping to write a row lock, SQLite will freeze the transaction until the previous one is complete up to the `busy_timeout` duration. This should prevent unneccessary waits due to polling. Perhaps this does not work like I imagine. Also, the ZombieZen variant uses immediate transactions, which may ignore the `busy_timeout`. This requires additional investigation before implementing. Implementation examples in other libraries to consider:
+
+    - https://github.com/ThreeDotsLabs/watermill-sql/blob/master/pkg/sql/backoff_manager.go
+    - https://github.com/ov2b/watermill-sqlite3/blob/main/reset_latch_backoff_manager.go
+    - Comments: https://github.com/dkotik/watermillsqlite/issues/6
 - [ ] Add clean up routines for removing old messages from topics.
     - [ ] wmsqlitemodernc.CleanUpTopics
     - [ ] wmsqlitezombiezen.CleanUpTopics
 - [ ] ExpiringKeyRepository needs clean up sync test
+- [ ] Replace SQL queries with an abstraction adaptor
+
+      Currently, SQL queries are hard-coded into into Publisher and Subscriber. Other implementations provide query adaptors that permit overriding the queries. The author is hesitant to make this change, because it is hard to imagine a use case where this kind of adjustment would be useful. Supporting it seems like over-engineering.
+
+      It is possible to override the table structure by manually creating the table and never setting the InitializeSchema constructor option. For rare specialty use cases, it seems cleaner to create a fork and re-run all the tests to make sure that all the SQL changes are viable and add additional tests. It seems that a query adaptor would just get in the way.
+
+      The issue is created so that arguments can be made in favor of adding a query adaptor.
 - [ ] Subscriber with poll interval lower than 10ms locks up; see BenchmarkAll; increasing the batch size also can cause a lock up
 - [ ] Three-Dots Labs acceptance requests:
     - [x] may be worth adding test like (but please double check if it makes sense here - it was problematic use case for Postgres): https://github.com/ThreeDotsLabs/watermill-sql/blob/master/pkg/sql/pubsub_test.go#L466 ([won't fix, see discussion](https://github.com/dkotik/watermillsqlite/issues/10#issuecomment-2813855209))
