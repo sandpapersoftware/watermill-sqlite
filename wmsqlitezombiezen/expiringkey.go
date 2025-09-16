@@ -77,12 +77,12 @@ func NewExpiringKeyRepository(config ExpiringKeyRepositoryConfiguration) (_ midd
 
 	r.StmtInsert, err = r.Connection.Prepare(`INSERT INTO '` + config.TableName + `' (key, expires_at) VALUES (?, ?)`)
 	if err != nil {
-		return nil, nil, fmt.Errorf("untable to prepare clean up statment for %q SQLite table: %w", config.TableName, err)
+		return nil, nil, fmt.Errorf("untable to prepare clean up statement for %q SQLite table: %w", config.TableName, err)
 	}
 	r.StmtCleanUp, err = r.Connection.Prepare(`DELETE FROM '` + config.TableName + `' WHERE expires_at<?`)
 	if err != nil {
 		_ = r.StmtInsert.Finalize()
-		return nil, nil, fmt.Errorf("untable to prepare clean up statment for %q SQLite table: %w", config.TableName, err)
+		return nil, nil, fmt.Errorf("untable to prepare clean up statement for %q SQLite table: %w", config.TableName, err)
 	}
 
 	return r, func() error {
