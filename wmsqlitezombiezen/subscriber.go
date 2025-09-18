@@ -70,7 +70,8 @@ var defaultBufferPool = &sync.Pool{
 	},
 }
 
-// SubscriberOptions defines options for creating a subscriber. Every selection has a reasonable default value.
+// SubscriberOptions defines options for creating a subscriber.
+// Every selection has a reasonable default value.
 type SubscriberOptions struct {
 	// ConsumerGroupMatcher differentiates message consumers within the same topic.
 	// Messages are processed in batches.
@@ -88,7 +89,8 @@ type SubscriberOptions struct {
 	// Default value is [TableNameGenerators.WithDefaultGeneratorsInsteadOfNils].
 	TableNameGenerators TableNameGenerators
 
-	// PollInterval is the interval to wait between subsequent SELECT queries, if no more messages were found in the database (Prefer using the BackoffManager instead).
+	// PollInterval is the interval to wait between subsequent SELECT queries,
+	// if no more messages were found in the database (Prefer using the BackoffManager instead).
 	// Must be non-negative. Default value is one second.
 	PollInterval time.Duration
 
@@ -102,7 +104,9 @@ type SubscriberOptions struct {
 	// A zero duration would create a lock that expires immediately.
 	// There is no reason to set higher precision fractional duration,
 	// because the lock timeout will rarely ever trigger in a healthy system.
-	// Normally, the row lock is set to zero after each batch of messages is processed. LockTimeout might occur if a consuming node shuts down unexpectedly,
+	//
+	// Normally, the row lock is set to zero after each batch of messages is processed.
+	// LockTimeout might occur if a consuming node shuts down unexpectedly,
 	// before it is able to complete processing a batch of messages. Only
 	// in such rare cases the time out matters. And, it is better to set it
 	// to a higher value in order to avoid unnecessary batch re-processing.
@@ -123,15 +127,19 @@ type SubscriberOptions struct {
 	// Must be non-negative. Default value is [DefaultAckDeadline].
 	AckDeadline *time.Duration
 
-	// BufferPool is a pool of buffers used for reading message payload and metadata from the database.
-	// If not provided, a default pool will be used. The pool may leak message metadata, but never the payload.
+	// BufferPool is a pool of buffers used for reading message payload and
+	// metadata from the database. If not provided, a default pool will be used.
+	// The pool may leak message metadata, but never the payload.
+	//
 	// Warning: If sync.Pool does not return a buffer, subscription will panic.
 	BufferPool *sync.Pool
 
 	// InitializeSchema option enables initializing schema on making a subscription.
 	InitializeSchema bool
 
-	// Logger reports message consumption errors and traces. Defaults to [watermill.NopLogger].
+	// Logger reports message consumption errors and traces.
+	//
+	// Defaults to [watermill.NopLogger].
 	Logger watermill.LoggerAdapter
 }
 

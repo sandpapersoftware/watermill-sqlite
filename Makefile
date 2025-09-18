@@ -47,12 +47,11 @@ fmt:
 	(cd test && go fmt ./... && goimports -l -w .)
 
 update_watermill:
-	go get -u github.com/ThreeDotsLabs/watermill
-	go mod tidy
+	(cd wmsqlitemodernc && go get -u github.com/ThreeDotsLabs/watermill-sqlite/test@latest && go get -u github.com/ThreeDotsLabs/watermill@latest && go mod tidy)
+	(cd wmsqlitezombiezen && go get -u github.com/ThreeDotsLabs/watermill-sqlite/test@latest && go get -u github.com/ThreeDotsLabs/watermill@latest && go mod tidy)
 
-	sed -i '\|go 1\.|d' go.mod
-	go mod edit -fmt
-
+	(cd wmsqlitemodernc && sed -i '\|go 1\.|d' go.mod && go mod edit -fmt)
+	(cd wmsqlitezombiezen && sed -i '\|go 1\.|d' go.mod && go mod edit -fmt)
 
 reflex_modernc:
 		(cd wmsqlitemodernc && reflex --inverse-regex=testdata -- sh -c 'clear; echo "[00] ---\n";go test ./... | grep -v -E "^(\?|ok)\s+"; echo "---"')

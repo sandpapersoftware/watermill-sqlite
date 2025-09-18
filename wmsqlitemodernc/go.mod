@@ -4,7 +4,7 @@ go 1.23.0
 
 require (
 	github.com/ThreeDotsLabs/watermill v1.5.1
-	github.com/ThreeDotsLabs/watermill-sqlite/test v0.0.5
+	github.com/ThreeDotsLabs/watermill-sqlite/test v0.1.1
 	github.com/google/uuid v1.6.0
 	modernc.org/sqlite v1.36.1
 )
