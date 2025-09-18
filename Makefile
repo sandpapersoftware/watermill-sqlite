@@ -50,8 +50,9 @@ update_watermill:
 	(cd wmsqlitemodernc && go get -u github.com/ThreeDotsLabs/watermill-sqlite/test@latest && go get -u github.com/ThreeDotsLabs/watermill@latest && go mod tidy)
 	(cd wmsqlitezombiezen && go get -u github.com/ThreeDotsLabs/watermill-sqlite/test@latest && go get -u github.com/ThreeDotsLabs/watermill@latest && go mod tidy)
 
-	(cd wmsqlitemodernc && sed -i '\|go 1\.|d' go.mod && go mod edit -fmt)
-	(cd wmsqlitezombiezen && sed -i '\|go 1\.|d' go.mod && go mod edit -fmt)
+	sed -i '|^go 1\.|d' wmsqlitemodernc/go.mod wmsqlitezombiezen/go.mod
+	(cd wmsqlitemodernc && go mod edit -fmt)
+	(cd wmsqlitezombiezen && go mod edit -fmt)
 
 reflex_modernc:
 		(cd wmsqlitemodernc && reflex --inverse-regex=testdata -- sh -c 'clear; echo "[00] ---\n";go test ./... | grep -v -E "^(\?|ok)\s+"; echo "---"')
