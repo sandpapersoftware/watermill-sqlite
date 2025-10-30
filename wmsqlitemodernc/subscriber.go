@@ -121,6 +121,10 @@ type SubscriberOptions struct {
 	// InitializeSchema option enables initializing schema on making a subscription.
 	InitializeSchema bool
 
+	// Notifier notifies the subscriber about new messages in a topic.
+	// To notify a certain topic subscriber, the channel must yield the topic name.
+	Notifier chan string
+
 	// Logger reports message consumption errors and traces.
 	//
 	// Defaults to [watermill.NopLogger].
@@ -141,6 +145,7 @@ type subscriber struct {
 	OffsetsTableNameGenerator TableNameGenerator
 	Logger                    watermill.LoggerAdapter
 	Subscriptions             *sync.WaitGroup
+	GetNotifier               func(topic string) chan struct{}
 }
 
 // NewSubscriber creates a new subscriber with the given options.
@@ -171,6 +176,9 @@ func NewSubscriber(db SQLiteDatabase, options SubscriberOptions) (message.Subscr
 		} else {
 			return nil, errors.New("LockTimeout must be greater than one second")
 		}
+	}
+	if options.Notifier == nil {
+		options.Notifier = make(chan string)
 	}
 	if options.BatchSize == 0 {
 		options.BatchSize = DefaultMessageBatchSize
@@ -232,9 +240,6 @@ func (s *subscriber) Subscribe(ctx context.Context, topic string) (c <-chan *mes
 	if err != nil {
 		return nil, fmt.Errorf("unable to match topic to a consumer group: %w", err)
 	}
-	if err = validateTopicName(consumerGroup); err != nil {
-		return nil, fmt.Errorf("consumer group name must follow the same validation rules as topic names: %w", err)
-	}
 
 	messagesTableName := s.TopicTableNameGenerator(topic)
 	offsetsTableName := s.OffsetsTableNameGenerator(topic)
@@ -257,6 +262,8 @@ func (s *subscriber) Subscribe(ctx context.Context, topic string) (c <-chan *mes
 	if err != nil {
 		return nil, err
 	}
+
+	notifierC := s.GetNotifier(topic)
 
 	sub := &subscription{
 		DB:           s.DB,
@@ -291,6 +298,9 @@ func (s *subscriber) Subscribe(ctx context.Context, topic string) (c <-chan *mes
 				"consumer_group": consumerGroup,
 			},
 		),
+		notifierC:    notifierC,
+		topic:        topic,
+		pollInterval: s.PollInterval,
 	}
 	sub.lockTicker = time.NewTicker(sub.lockDuration)
 
