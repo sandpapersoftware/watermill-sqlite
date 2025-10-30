@@ -15,9 +15,12 @@ import (
 type subscription struct {
 	DB           SQLiteDatabase
 	pollTicker   *time.Ticker
+	pollInterval time.Duration
 	lockTicker   *time.Ticker
 	lockDuration time.Duration
 	nackChannel  func() <-chan time.Time
+	notifierC    <-chan struct{}
+	topic        string
 
 	sqlLockConsumerGroup   string
 	sqlExtendLock          string
@@ -82,7 +85,13 @@ func (s *subscription) NextBatch(ctx context.Context) (batch []rawMessage, err e
 	if err != nil {
 		return nil, fmt.Errorf("unable to query next message batch: %w", err)
 	}
-	return buildBatch(rows)
+
+	batch, err = buildBatch(rows)
+	if err != nil {
+		return nil, fmt.Errorf("unable to build message batch: %w", err)
+	}
+
+	return batch, nil
 }
 
 func buildBatch(rows *sql.Rows) (batch []rawMessage, err error) {
@@ -183,32 +192,39 @@ func (s *subscription) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-s.pollTicker.C:
+			s.logger.Trace("poll interval", nil)
+		case <-s.notifierC:
+			s.pollTicker.Reset(s.pollInterval)
 		}
 
 		batch, err = s.NextBatch(ctx)
 		if err != nil {
-			if !errors.Is(err, context.Canceled) {
-				s.logger.Error("next message batch query failed", err, nil)
+			if errors.Is(err, context.Canceled) {
+				return
 			}
+			s.logger.Error("next message batch query failed", err, nil)
 			continue
 		}
 		if len(batch) == 0 {
+			s.logger.Trace("empty batch", nil)
 			continue // the lock is never set on empty batches
 		}
 
 		for _, next := range batch {
 			if err = s.Send(ctx, next); err != nil {
-				if !errors.Is(err, context.Canceled) {
-					s.logger.Error("failed to process queued message", err, nil)
+				if errors.Is(err, context.Canceled) {
+					return
 				}
+				s.logger.Error("failed to process queued message", err, nil)
 				continue
 			}
 		}
 
 		if err = s.ReleaseLock(ctx); err != nil {
-			if !errors.Is(err, context.Canceled) {
-				s.logger.Error("failed to acknowledge processed messages", err, nil)
+			if errors.Is(err, context.Canceled) {
+				return
 			}
+			s.logger.Error("failed to acknowledge processed messages", err, nil)
 		}
 	}
 }
