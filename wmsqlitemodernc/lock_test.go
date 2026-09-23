@@ -9,15 +9,15 @@ import (
 	"github.com/google/uuid"
 )
 
-// TestMessageIsRedeliveredAfterLockIsLost makes sure that a message is not skipped
+// TestNackAfterLockIsLost makes sure that a message is still redelivered on nack
 // when the consumer group lock expires while the message awaits acknowledgement.
-func TestMessageIsRedeliveredAfterLockIsLost(t *testing.T) {
+func TestNackAfterLockIsLost(t *testing.T) {
 	dsn := "file:" + uuid.New().String() + "?mode=memory&journal_mode=WAL&busy_timeout=1000&secure_delete=true&foreign_keys=true&cache=shared"
 	db := newTestConnection(t, dsn)
 
 	ctx, cancel := context.WithCancel(context.TODO()) // TODO: replace with t.Context() when Watermill bumps up to 1.24
 	defer cancel()
-	topic := "TestMessageIsRedeliveredAfterLockIsLost"
+	topic := "TestNackAfterLockIsLost"
 	tg := TableNameGenerators{}.WithDefaultGeneratorsInsteadOfNils()
 
 	pub, err := NewPublisher(db, PublisherOptions{
@@ -68,12 +68,12 @@ func TestMessageIsRedeliveredAfterLockIsLost(t *testing.T) {
 	}
 	// wait for the lock extension attempt, which happens after 1.7 seconds
 	time.Sleep(time.Millisecond * 2200)
-	msg0.Ack()
+	msg0.Nack()
 
 	select {
 	case next := <-messagesFromSubscriber:
 		if next.UUID != "0" {
-			t.Fatalf("expected message 0 to be redelivered after the lock was lost but got message %s", next.UUID)
+			t.Fatalf("expected message 0 to be redelivered after nack but got message %s", next.UUID)
 		}
 		next.Ack()
 	case <-time.After(time.Second * 2):
