@@ -120,8 +120,12 @@ func buildBatch(rows *sql.Rows) (batch []rawMessage, err error) {
 }
 
 func (s *subscription) ExtendLock(ctx context.Context) error {
-	row := s.DB.QueryRowContext(ctx, s.sqlExtendLock, s.lastAckedOffset, s.lockedOffset)
-	if err := row.Err(); err != nil {
+	var lockedUntil int64
+	err := s.DB.QueryRowContext(ctx, s.sqlExtendLock, s.lastAckedOffset, s.lockedOffset).Scan(&lockedUntil)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return errors.New("unable to extend lock: lock expired or was taken over")
+		}
 		return fmt.Errorf("unable to extend lock: %w", err)
 	}
 	s.lockTicker.Reset(s.lockDuration)

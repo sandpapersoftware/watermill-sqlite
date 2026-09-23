@@ -262,7 +262,10 @@ func (s *subscriber) Subscribe(ctx context.Context, topic string) (c <-chan *mes
 		return nil, err
 	}
 
-	notifierC := s.GetNotifier(topic)
+	var notifierC <-chan struct{}
+	if s.GetNotifier != nil {
+		notifierC = s.GetNotifier(topic)
+	}
 
 	sub := &subscription{
 		DB:           s.DB,
