@@ -12,6 +12,9 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 )
 
+// errLockLost indicates that the consumer group lock expired or was taken over by another subscriber.
+var errLockLost = errors.New("lock expired or was taken over")
+
 type subscription struct {
 	DB           SQLiteDatabase
 	pollTicker   *time.Ticker
@@ -120,8 +123,12 @@ func buildBatch(rows *sql.Rows) (batch []rawMessage, err error) {
 }
 
 func (s *subscription) ExtendLock(ctx context.Context) error {
-	row := s.DB.QueryRowContext(ctx, s.sqlExtendLock, s.lastAckedOffset, s.lockedOffset)
-	if err := row.Err(); err != nil {
+	var lockedUntil int64
+	err := s.DB.QueryRowContext(ctx, s.sqlExtendLock, s.lastAckedOffset, s.lockedOffset).Scan(&lockedUntil)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("unable to extend lock: %w", errLockLost)
+		}
 		return fmt.Errorf("unable to extend lock: %w", err)
 	}
 	s.lockTicker.Reset(s.lockDuration)
@@ -212,11 +219,18 @@ func (s *subscription) Run(ctx context.Context) {
 
 		for _, next := range batch {
 			if err = s.Send(ctx, next); err != nil {
-				if errors.Is(err, context.Canceled) {
-					return
-				}
-				s.logger.Error("failed to process queued message", err, nil)
-				continue
+				// skipping to the next message would lose the current one,
+				// once a subsequent message is acknowledged
+				break
+			}
+		}
+		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				return
+			}
+			s.logger.Error("failed to process queued message, aborting batch", err, nil)
+			if errors.Is(err, errLockLost) {
+				continue // offsets must not be committed without the lock, the batch will be fetched again
 			}
 		}
 
